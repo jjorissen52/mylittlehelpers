@@ -213,7 +213,8 @@ def print_duration(start):
     return f'{time_string:>12}'
 
 
-def time_bomb(action, countdown, dots=3):
+def time_bomb(countdown, package=(print, ("BOOM",)), action="", dots=3):
+    action = action if action else package[0].__name__
     sys.stdout.write(f"{action} in {countdown}")
     sys.stdout.flush()
     for i in range(countdown - 1, -1, -1):
@@ -225,3 +226,4 @@ def time_bomb(action, countdown, dots=3):
         sys.stdout.write(f"{i}")
         sys.stdout.flush()
     print("")
+    package[0](*package[1])
