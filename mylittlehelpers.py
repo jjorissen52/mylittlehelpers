@@ -23,7 +23,7 @@ def __except__(exception, replacement_function):
 
 class InterfaceSettings:
 
-    SETTINGS_DIR = os.path.dirname(__file__)
+    SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
     CONF_NAME = "conf.conf"
 
     def __init__(self, settings_dir, conf_name):
@@ -115,8 +115,12 @@ class InterfaceSettings:
 
         print(f'{2 if flat else 1} selected.')
 
-        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME)) as conf:
-            SECRETS_LOCATION = json.load(conf).get('SECRETS_LOCATION')
+        try:
+            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME)) as conf:
+                SECRETS_LOCATION = json.load(conf).get('SECRETS_LOCATION')
+
+        except FileNotFoundError:
+            SECRETS_LOCATION = "secrets.json"
 
         with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME), 'w') as new_conf:
             new_conf_dict = {"USE_FLAT_FILES": flat, "SECRETS_LOCATION": SECRETS_LOCATION}
@@ -129,7 +133,6 @@ class InterfaceSettings:
 
     @staticmethod
     def create_secrets():
-        InterfaceSettings.set_conf()
         InterfaceSettings.set_secrets()
         return InterfaceSettings.load_secrets()
 
