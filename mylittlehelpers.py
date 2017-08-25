@@ -10,9 +10,25 @@ class ImproperlyConfigured(BaseException):
     pass
 
 
+def __except__(exception, replacement_function):
+    def _try_wrap(function):
+        def __try_wrap(*__args, **__kwargs):
+            try:
+                return function(*__args, **__kwargs)
+            except exception as e:
+                return replacement_function(*__args, **__kwargs)
+        return __try_wrap
+    return _try_wrap
+
+
 class InterfaceSettings:
 
     SETTINGS_DIR = os.path.dirname(__file__)
+    CONF_NAME = "conf.conf"
+
+    def __init__(self, settings_dir, conf_name):
+        InterfaceSettings.SETTINGS_DIR = settings_dir
+        InterfaceSettings.CONF_NAME = conf_name
 
     @staticmethod
     def gather_secrets_location(create, designate):
@@ -60,9 +76,9 @@ class InterfaceSettings:
         SECRETS_LOCATION = InterfaceSettings.gather_secrets_location(create, designate)
 
         if create:
-            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, 'conf.py')) as conf:
+            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME)) as conf:
                 USE_FLAT_FILES = json.load(conf)['USE_FLAT_FILES']
-            SECRETS_LOCATION = os.path.join(SECRETS_LOCATION, 'bullhorn_secrets.json')
+            SECRETS_LOCATION = os.path.join(SECRETS_LOCATION, 'secrets.json')
             secrets = {
                 "CLIENT_ID": input("Please input your Client ID for API development: "),
                 "CLIENT_SECRET": getpass.getpass("Client Secret: "),
@@ -71,16 +87,16 @@ class InterfaceSettings:
                 "DB_USER": input("PostgreSQL database login role username. (Database used to store access and API tokens): "),
                 "DB_PASSWORD": getpass.getpass("PostgreSQL database login role password. (Database used to store access and API tokens): "),
             }
-            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, 'conf.py'), 'w') as new_conf:
+            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME), 'w') as new_conf:
                 new_conf_dict = {"USE_FLAT_FILES": USE_FLAT_FILES, "SECRETS_LOCATION": SECRETS_LOCATION}
                 new_conf.write(json.dumps(new_conf_dict, indent=4))
             with open(os.path.join(SECRETS_LOCATION), 'w') as new_secrets:
                 new_secrets.write(json.dumps(secrets, indent=4))
 
         elif designate:
-            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, 'conf.py')) as conf:
+            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME)) as conf:
                 USE_FLAT_FILES = json.load(conf)['USE_FLAT_FILES']
-            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, 'conf.py'), 'w') as new_conf:
+            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME), 'w') as new_conf:
                 new_conf_dict = {"USE_FLAT_FILES": USE_FLAT_FILES, "SECRETS_LOCATION": SECRETS_LOCATION}
                 new_conf.write(json.dumps(new_conf_dict, indent=4))
 
@@ -99,22 +115,16 @@ class InterfaceSettings:
 
         print(f'{2 if flat else 1} selected.')
 
-        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, 'conf.py')) as conf:
+        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME)) as conf:
             SECRETS_LOCATION = json.load(conf).get('SECRETS_LOCATION')
 
-        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, 'conf.py'), 'w') as new_conf:
+        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME), 'w') as new_conf:
             new_conf_dict = {"USE_FLAT_FILES": flat, "SECRETS_LOCATION": SECRETS_LOCATION}
             new_conf.write(json.dumps(new_conf_dict, indent=4))
 
     @staticmethod
     def create_conf():
-        print('creating conf')
-        conf_dict = {
-            "USE_FLAT_FILES": True,
-            "SECRETS_LOCATION": "bullhorn_secrets.py"
-        }
-        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, 'conf.py'), 'w') as conf:
-            conf.write(json.dumps(conf_dict, indent=4))
+        InterfaceSettings.set_conf()
         return InterfaceSettings.load_conf()
 
     @staticmethod
@@ -127,7 +137,7 @@ class InterfaceSettings:
     @__except__(FileNotFoundError, lambda: InterfaceSettings.create_conf())
     def load_conf():
 
-        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, 'conf.py')) as conf:
+        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME)) as conf:
             conf = json.load(conf)
         return conf
 
@@ -148,7 +158,7 @@ class InterfaceSettings:
             DB_PASSWORD = secrets["DB_PASSWORD"]
         except KeyError as e:
             if "USE_FLAT_FILES" in e.args[0]:
-                raise ImproperlyConfigured(f'{e.args[0]} not found in conf.py')
+                raise ImproperlyConfigured(f'{e.args[0]} not found in {InterfaceSettings.CONF_NAME}')
             else:
                 raise ImproperlyConfigured(f'{e.args[0]} not found in {conf["SECRETS_LOCATION"]}')
         return secrets
@@ -196,14 +206,3 @@ def print_duration(start):
     minutes, seconds = divmod(rem, 60)
     time_string = f'{trunc(hours):02d}:{trunc(minutes):02d}:{trunc(seconds):02d}'
     return f'{time_string:>12}'
-
-
-def __except__(exception, replacement_function):
-    def _try_wrap(function):
-        def __try_wrap(*__args, **__kwargs):
-            try:
-                return function(*__args, **__kwargs)
-            except exception as e:
-                return replacement_function(*__args, **__kwargs)
-        return __try_wrap
-    return _try_wrap
