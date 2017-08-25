@@ -5,6 +5,8 @@ import time
 import smtplib
 from math import trunc
 
+import sys
+
 
 class ImproperlyConfigured(BaseException):
     pass
@@ -209,3 +211,17 @@ def print_duration(start):
     minutes, seconds = divmod(rem, 60)
     time_string = f'{trunc(hours):02d}:{trunc(minutes):02d}:{trunc(seconds):02d}'
     return f'{time_string:>12}'
+
+
+def time_bomb(action, countdown, dots=3):
+    sys.stdout.write(f"{action} in {countdown}")
+    sys.stdout.flush()
+    for i in range(countdown - 1, -1, -1):
+        for j in range(dots):
+            time.sleep(1.0/(dots + 1))
+            sys.stdout.write(".")
+            sys.stdout.flush()
+        time.sleep(.25)
+        sys.stdout.write(f"{i}")
+        sys.stdout.flush()
+    print("")
