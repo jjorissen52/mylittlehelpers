@@ -16,7 +16,6 @@ import os
 import struct
 import sys
 
-from getpass import getpass
 from os.path import exists, splitext
 
 from Crypto.Cipher import AES
@@ -402,12 +401,12 @@ def main(args=None):
     with open(args.infile, 'rb') as infile, \
             open(args.outfile, 'wb') as outfile:
         if args.decrypt:
-            decrypt(infile, outfile, getpass("Enter decryption password: "))
+            decrypt(infile, outfile, getpass.getpass("Enter decryption password: "))
         else:
             try:
                 while True:
-                    passwd = getpass("Enter encryption password: ")
-                    passwd2 = getpass("Verify password: ")
+                    passwd = getpass.getpass("Enter encryption password: ")
+                    passwd2 = getpass.getpass("Verify password: ")
 
                     if passwd != passwd2:
                         print("Password mismatch!")
