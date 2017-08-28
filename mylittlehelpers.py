@@ -1,3 +1,6 @@
+from __future__ import print_function, unicode_literals
+__all__ = ('encrypt', 'decrypt')
+
 import getpass
 import json
 import os
@@ -6,10 +9,6 @@ import smtplib
 from math import trunc
 
 import sys
-
-from __future__ import print_function, unicode_literals
-
-__all__ = ('encrypt', 'decrypt')
 
 import argparse
 import os
