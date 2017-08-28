@@ -159,9 +159,12 @@ class InterfaceSettings:
     @staticmethod
     @__except__(FileNotFoundError, lambda: InterfaceSettings.create_conf())
     def load_conf():
-
-        with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME)) as conf:
-            conf = json.load(conf)
+        try:
+            with open(os.path.join('interface.conf'), 'r') as conf:
+                conf = json.load(conf)
+        except FileNotFoundError:
+            with open(os.path.join(InterfaceSettings.SETTINGS_DIR, InterfaceSettings.CONF_NAME)) as conf:
+                conf = json.load(conf)
         return conf
 
     @staticmethod
