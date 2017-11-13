@@ -57,12 +57,12 @@ def time_check(start):
     return start, auto_refresh
 
 
-def time_elapsed(start):
+def time_elapsed(start, string_width=12):
     current_time = time.time()
     hours, rem = divmod(current_time - start, 3600)
     minutes, seconds = divmod(rem, 60)
     time_string = f'{trunc(hours):02d}:{trunc(minutes):02d}:{trunc(seconds):02d}'
-    return f'{time_string:>12}'
+    return f'{time_string:>{string_width}}'
 
 
 def time_bomb(countdown, package=(print, ("BOOM",)), action="", dots=3):
