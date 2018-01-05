@@ -91,3 +91,8 @@ def setup_logger(name, log_file, level=logging.INFO):
 
     return logger
 
+def remove_if_exists(file_name):
+    try:
+        os.remove(file_name)
+    except OSError:
+        pass
