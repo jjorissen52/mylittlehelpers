@@ -82,6 +82,10 @@ def time_bomb(countdown, package=(print, ("BOOM",)), action="", dots=3):
 
 def setup_logger(name, log_file, level=logging.INFO):
     """Function setup as many loggers as you want"""
+    try:
+        os.makedirs(os.path.dirname(log_file))
+    except FileExistsError:
+        pass
 
     handler = logging.FileHandler(log_file)
 
