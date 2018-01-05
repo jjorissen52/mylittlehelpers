@@ -5,7 +5,7 @@ import smtplib
 from math import trunc
 import sys
 import os
-
+import logging
 
 class ImproperlyConfigured(BaseException):
     pass
@@ -75,8 +75,19 @@ def time_bomb(countdown, package=(print, ("BOOM",)), action="", dots=3):
             sys.stdout.write(".")
             sys.stdout.flush()
         time.sleep(.25)
-        sys.stdout.write(f"{i}")
+        sys.stdout.write(str(i))
         sys.stdout.flush()
     print("")
     package[0](*package[1])
+
+def setup_logger(name, log_file, level=logging.INFO):
+    """Function setup as many loggers as you want"""
+
+    handler = logging.FileHandler(log_file)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+
+    return logger
 
