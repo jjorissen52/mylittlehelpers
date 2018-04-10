@@ -10,6 +10,7 @@ from exchangelib import Account, Credentials, Message, Mailbox, HTMLBody, FileAt
 from io import BytesIO
 import ntpath
 import configparser
+import boto3
 
 
 class ImproperlyConfigured(BaseException):
@@ -231,3 +232,46 @@ def send_email(credentials, email_list=None, email_subject='', email_body=None, 
         m.send_and_save()
     else:
         raise SendError(f'email_list must be a list object of recipient email addresses. Cannot be {type(email_list)}.')
+
+
+def send_ses(access_id, access_key, sender, recipient_list, subject, body_html, body_text=None):
+    from botocore.exceptions import ClientError
+
+    AWS_REGION = "us-east-1"
+
+    CHARSET = "UTF-8"
+
+    client = boto3.client('ses',
+                          aws_access_key_id=access_id,
+                          aws_secret_access_key=access_key,
+                          region_name=AWS_REGION)
+
+    try:
+        response = client.send_email(
+            Destination={
+                'ToAddresses': recipient_list
+            },
+            Message={
+                'Body': {
+                    'Html': {
+                        'Charset': CHARSET,
+                        'Data': body_html,
+                    },
+                    'Text': {
+                        'Charset': CHARSET,
+                        'Data': body_text,
+                    },
+                },
+                'Subject': {
+                    'Charset': CHARSET,
+                    'Data': subject,
+                },
+            },
+            Source=sender,
+        )
+    # Display an error if something goes wrong.
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+    else:
+        print("Email sent! Message ID:"),
+        print(response['ResponseMetadata']['RequestId'])
