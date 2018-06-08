@@ -6,7 +6,6 @@ from math import trunc
 import sys
 import os
 import logging
-from exchangelib import Account, Credentials, Message, Mailbox, HTMLBody, FileAttachment
 from io import BytesIO
 import ntpath
 import configparser
@@ -183,55 +182,6 @@ def get_credentials(path, region="microsoft_exchange_email", address_key="email"
     config.read(path)
     credentials = {"email_address": config.get(region, address_key), "email_password": config.get(region, password_key)}
     return credentials
-
-
-def send_email(credentials, email_list=None, email_subject='', email_body=None, attachment=None, attachment_name=None):
-    """
-    sends an email (using exchangelib)
-
-    :param credentials: (dict) with keys email_address and email_password
-    :param email_list: (list) of email addresses that will receive the email
-    :param email_subject: (str) subject line
-    :param email_body: (str, HTMLBody) body of email
-    :param attachment: (str, bytes, io.BytesIO) path or bytes of attachment
-    :param attachment_name: (str) name of attachment, use when attachment is bytes or io.BytesIO
-    :return:
-    """
-    if isinstance(email_list, list):
-        to_list = []
-        for each in email_list:
-            to_list.append(Mailbox(email_address=each))
-
-        if isinstance(email_body, HTMLBody) or isinstance(email_body, str):
-            a = Account(credentials['email_address'],
-                        credentials=Credentials(credentials['email_address'], credentials['email_password']),
-                        autodiscover=True)
-            m = Message(
-                account=a,
-                folder=a.sent,
-                subject=f'{email_subject}',
-                body=email_body,
-                to_recipients=to_list
-            )
-        else:
-            raise SendError(f'email_body must be either {str} or {HTMLBody().__class__}!')
-
-        if isinstance(attachment, str):
-            attachment_name, attachment = binary(os.path.abspath(attachment))
-        elif isinstance(attachment, bytes):
-            attachment = attachment
-        elif isinstance(attachment, BytesIO().__class__):
-            attachment = attachment.read()
-        elif attachment:
-            raise SendError(
-                f'attachment must be the path to a file or {BytesIO().__class__} or {bytes}. Cannot be {type(attachment)}.')
-        if attachment and attachment_name:
-            m.attach(FileAttachment(name=attachment_name, content=attachment))
-        elif attachment and not attachment_name:
-            raise SendError(f'If attachment is not a file path, attachment_name cannot be f{type(attachment_name)}')
-        m.send_and_save()
-    else:
-        raise SendError(f'email_list must be a list object of recipient email addresses. Cannot be {type(email_list)}.')
 
 
 def send_ses(access_id, access_key, sender, recipient_list, subject, body_html, body_text=None):
