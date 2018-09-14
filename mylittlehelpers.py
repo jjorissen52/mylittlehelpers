@@ -19,7 +19,8 @@ class ImproperlyConfigured(BaseException):
 def __except__(exception, replacement_function):
     """
     Function wrapper. If the wrapped function encounters the specified exception, it will instead perform the replacement function (with the same arguments).
-    
+
+    # ayy
     :param exception: (Exception) 
     :param replacement_function: 
     :return: 
